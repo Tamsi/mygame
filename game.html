@@ -1,0 +1,196 @@
+<html>
+	<head>
+		<title>Tank</title>
+		<script type="text/javascript" src="js/phaser.min.js"></script>
+
+	</head>
+
+	<body>
+
+	<script type="text/javascript">
+
+	var game = new Phaser.Game(800, 600, Phaser.AUTO, '', {preload: preload, create: create, update: update });
+	var ground;
+	var tank;
+	var enemies;
+	var cursors;
+	var q;
+	var d;
+	var z;
+	var playerScore = 0;
+	var enemyScore = 0;
+	var playerScoreText;
+	var enemyScoreText;
+	var timeWait = 2000;
+	var timer;
+	var jumpSound;
+	var deadSound;
+
+
+	function preload() {
+			
+		game.load.image('sol', 'images/platform.png')
+		game.load.image('sky', 'images/sky4.png')
+		game.load.spritesheet('player', 'images/dude.png', 32, 48)
+		game.load.audio('blop', 'sons/jump.mp3');
+		game.load.audio('dead', 'sons/die.mp3');
+
+	}
+
+	function create(){
+		game.physics.startSystem(Phaser.Physics.ARCADE);
+			//console.log(game.world.height);
+
+			jumpSound = game.add.audio('blop');
+			deadSound = game.add.audio('dead')
+		
+			sol = game.add.sprite(0, game.world.height-64, 'sol');
+			sol.scale.setTo(2, 2);
+			game.physics.arcade.enable(sol);
+			sol.body.immovable = true;
+
+			sky = game.add.sprite(0, -64, 'sky');	
+
+			platform = game.add.sprite(200, 450, 'sol');
+			platform.scale.setTo(1, 0.5);	
+			game.physics.arcade.enable(platform);
+			platform.body.immovable = true;	
+
+			playerScoreText = game.add.text(16, 16, 'player: 0', { fontSize: '32px', fill: '#000000' });
+			enemyScoreText = game.add.text(3*game.world.width/4, 16, 'enemy: 0', { fontSize: '32px', fill: '#ff0000' });
+
+			createPlayer();
+			createEnemy();
+
+			cursors = game.input.keyboard.createCursorKeys();
+
+			q = game.input.keyboard.addKey(Phaser.Keyboard.Q);
+			d = game.input.keyboard.addKey(Phaser.Keyboard.D);
+			z = game.input.keyboard.addKey(Phaser.Keyboard.Z);
+
+
+
+	}
+
+	function update(){
+		game.physics.arcade.collide(player, sol);
+		game.physics.arcade.collide(enemy, sol);
+		game.physics.arcade.collide(player, platform);
+		game.physics.arcade.collide(enemy, platform);
+		game.physics.arcade.collide(enemy, player, fight);
+
+		if (cursors.left.isDown){
+
+			player.body.velocity.x = -150;
+			player.animations.play('gauche');
+
+		} else if (cursors.right.isDown){
+
+			player.body.velocity.x = 150;
+			player.animations.play('droite');
+
+		} else {
+
+			player.animations.stop();
+			player.body.velocity.x = 0;
+			player.frame = 4;
+		}
+
+		if (cursors.up.isDown && player.body.touching.down){
+
+			jumpSound.play();
+			player.body.velocity.y = -250;		
+		}
+
+		if (q.isDown){
+
+			enemy.body.velocity.x = -150;
+			enemy.animations.play('gauche');
+
+		} else if (d.isDown){
+
+			enemy.body.velocity.x = 150;
+			enemy.animations.play('droite');
+
+		} else {
+
+			enemy.animations.stop();
+			enemy.body.velocity.x = 0;
+			enemy.frame = 4;
+		}
+
+		if (z.isDown && enemy.body.touching.down){
+
+			jumpSound.play();
+			enemy.body.velocity.y = -250;		
+		}
+	}
+
+	function fight(enemy, player){
+		
+		//console.log("enemy:" + enemy.body.height+ 'position:' + enemy.body.bottom);
+		//console.log("player:" + player.body.height + 'pos:' + player.body.bottom);
+
+		if (parseInt(player.body.bottom) <= parseInt(enemy.body.bottom-enemy.body.height)){
+
+			enemy.kill();
+			player.kill();
+			deadSound.play();
+			playerScore += 1;
+			playerScoreText.text = 'player: ' + playerScore;
+
+			timer = game.time.create(false);
+			timer.loop(timeWait, repopAll, this);
+			timer.start();
+			
+		}
+
+
+		if (parseInt(enemy.body.bottom) <= parseInt(player.body.bottom-player.body.height)){
+
+			player.kill();
+			enemy.kill();
+			deadSound.play();
+			enemyScore += 1;
+			enemyScoreText.text = 'enemy: ' + enemyScore;
+
+			timer = game.time.create(false);
+			timer.loop(timeWait, repopAll, this);
+			timer.start();
+		}
+	}
+
+	function createEnemy(){
+
+		enemy = game.add.sprite(game.world.width-32, 0, 'player');
+		game.physics.arcade.enable(enemy);
+		enemy.body.gravity.y = 350;
+		enemy.body.collideWorldBounds = true;
+		enemy.animations.add('gauche', [0, 1, 2, 3], 10, true);
+		enemy.animations.add('droite', [5, 6, 7, 8], 10, true);
+		enemy.tint = 0xff0000;
+		
+
+	}
+
+	function createPlayer(){
+
+		player = game.add.sprite(0, 0, 'player');
+		game.physics.arcade.enable(player);
+		player.body.gravity.y = 350;
+		player.body.collideWorldBounds = true;
+		player.animations.add('gauche', [0, 1, 2, 3], 10, true);
+		player.animations.add('droite', [5, 6, 7, 8], 10, true);
+	}
+
+	function repopAll(){
+
+		createEnemy();
+		createPlayer();
+		timer.stop();
+
+	}
+
+	</script>
+
+	</body>
