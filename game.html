@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>Tank</title>
+		<title>GameISN</title>
 		<script type="text/javascript" src="js/phaser.min.js"></script>
 
 	</head>
@@ -11,16 +11,15 @@
 
 	var game = new Phaser.Game(800, 600, Phaser.AUTO, '', {preload: preload, create: create, update: update });
 	var ground;
-	var tank;
 	var enemies;
 	var cursors;
 	var q;
 	var d;
 	var z;
 	var playerScore = 0;
-	var enemyScore = 0;
+	var player2Score = 0;
 	var playerScoreText;
-	var enemyScoreText;
+	var player2ScoreText;
 	var timeWait = 2000;
 	var timer;
 	var jumpSound;
@@ -39,8 +38,7 @@
 
 	function create(){
 		game.physics.startSystem(Phaser.Physics.ARCADE);
-			//console.log(game.world.height);
-
+			
 			jumpSound = game.add.audio('blop');
 			deadSound = game.add.audio('dead')
 		
@@ -57,10 +55,10 @@
 			platform.body.immovable = true;	
 
 			playerScoreText = game.add.text(16, 16, 'player: 0', { fontSize: '32px', fill: '#000000' });
-			enemyScoreText = game.add.text(3*game.world.width/4, 16, 'enemy: 0', { fontSize: '32px', fill: '#ff0000' });
+			player2ScoreText = game.add.text(3*game.world.width/4, 16, 'player2: 0', { fontSize: '32px', fill: '#ff0000' });
 
 			createPlayer();
-			createEnemy();
+			createplayer2();
 
 			cursors = game.input.keyboard.createCursorKeys();
 
@@ -74,10 +72,10 @@
 
 	function update(){
 		game.physics.arcade.collide(player, sol);
-		game.physics.arcade.collide(enemy, sol);
+		game.physics.arcade.collide(player2, sol);
 		game.physics.arcade.collide(player, platform);
-		game.physics.arcade.collide(enemy, platform);
-		game.physics.arcade.collide(enemy, player, fight);
+		game.physics.arcade.collide(player2, platform);
+		game.physics.arcade.collide(player2, player, fight);
 
 		if (cursors.left.isDown){
 
@@ -99,41 +97,38 @@
 		if (cursors.up.isDown && player.body.touching.down){
 
 			jumpSound.play();
-			player.body.velocity.y = -250;		
+			player.body.velocity.y = -320;		
 		}
 
 		if (q.isDown){
 
-			enemy.body.velocity.x = -150;
-			enemy.animations.play('gauche');
+			player2.body.velocity.x = -150;
+			player2.animations.play('gauche');
 
 		} else if (d.isDown){
 
-			enemy.body.velocity.x = 150;
-			enemy.animations.play('droite');
+			player2.body.velocity.x = 150;
+			player2.animations.play('droite');
 
 		} else {
 
-			enemy.animations.stop();
-			enemy.body.velocity.x = 0;
-			enemy.frame = 4;
+			player2.animations.stop();
+			player2.body.velocity.x = 0;
+			player2.frame = 4;
 		}
 
-		if (z.isDown && enemy.body.touching.down){
+		if (z.isDown && player2.body.touching.down){
 
 			jumpSound.play();
-			enemy.body.velocity.y = -250;		
+			player2.body.velocity.y = -320;		
 		}
 	}
 
-	function fight(enemy, player){
+	function fight(player2, player){
 		
-		//console.log("enemy:" + enemy.body.height+ 'position:' + enemy.body.bottom);
-		//console.log("player:" + player.body.height + 'pos:' + player.body.bottom);
+		if (parseInt(player.body.bottom) <= parseInt(player2.body.bottom-player2.body.height)){
 
-		if (parseInt(player.body.bottom) <= parseInt(enemy.body.bottom-enemy.body.height)){
-
-			enemy.kill();
+			player2.kill();
 			player.kill();
 			deadSound.play();
 			playerScore += 1;
@@ -146,13 +141,13 @@
 		}
 
 
-		if (parseInt(enemy.body.bottom) <= parseInt(player.body.bottom-player.body.height)){
+		if (parseInt(player2.body.bottom) <= parseInt(player.body.bottom-player.body.height)){
 
 			player.kill();
-			enemy.kill();
+			player2.kill();
 			deadSound.play();
-			enemyScore += 1;
-			enemyScoreText.text = 'enemy: ' + enemyScore;
+			player2Score += 1;
+			player2ScoreText.text = 'player2: ' + player2Score;
 
 			timer = game.time.create(false);
 			timer.loop(timeWait, repopAll, this);
@@ -160,15 +155,15 @@
 		}
 	}
 
-	function createEnemy(){
+	function createplayer2(){
 
-		enemy = game.add.sprite(game.world.width-32, 0, 'player');
-		game.physics.arcade.enable(enemy);
-		enemy.body.gravity.y = 350;
-		enemy.body.collideWorldBounds = true;
-		enemy.animations.add('gauche', [0, 1, 2, 3], 10, true);
-		enemy.animations.add('droite', [5, 6, 7, 8], 10, true);
-		enemy.tint = 0xff0000;
+		player2 = game.add.sprite(game.world.width-32, 0, 'player');
+		game.physics.arcade.enable(player2);
+		player2.body.gravity.y = 500;
+		player2.body.collideWorldBounds = true;
+		player2.animations.add('gauche', [0, 1, 2, 3], 10, true);
+		player2.animations.add('droite', [5, 6, 7, 8], 10, true);
+		player2.tint = 0xff0000;
 		
 
 	}
@@ -177,7 +172,7 @@
 
 		player = game.add.sprite(0, 0, 'player');
 		game.physics.arcade.enable(player);
-		player.body.gravity.y = 350;
+		player.body.gravity.y = 500;
 		player.body.collideWorldBounds = true;
 		player.animations.add('gauche', [0, 1, 2, 3], 10, true);
 		player.animations.add('droite', [5, 6, 7, 8], 10, true);
@@ -185,7 +180,7 @@
 
 	function repopAll(){
 
-		createEnemy();
+		createplayer2();
 		createPlayer();
 		timer.stop();
 
